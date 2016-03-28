@@ -8,6 +8,7 @@
 
 import spock.lang.Specification
 import ws.ns.hystrix.CommandHelloWorld
+import ws.ns.hystrix.CommandWithFallback
 
 class HystrixTest extends Specification {
   def "should return hello world"() {
@@ -19,4 +20,14 @@ class HystrixTest extends Specification {
       result == "Hello Angel!"
   }
 
+  def "should use fallback"() {
+    setup:
+      CommandWithFallback commandWithFallback = new CommandWithFallback("Angel")
+    when:
+      String result = commandWithFallback.execute()
+    then:
+      result == "Hello Angel!"
+      commandWithFallback.isFailedExecution()
+      commandWithFallback.isResponseFromFallback()
+  }
 }
