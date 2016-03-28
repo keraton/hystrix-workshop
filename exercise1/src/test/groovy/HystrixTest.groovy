@@ -11,6 +11,7 @@ import spock.lang.Specification
 import ws.ns.hystrix.CommandHelloWorld
 import ws.ns.hystrix.CommandWithCache
 import ws.ns.hystrix.CommandWithFallback
+import ws.ns.hystrix.CommandWithNetworkFallback
 
 class HystrixTest extends Specification {
   def "should return hello world"() {
@@ -48,5 +49,17 @@ class HystrixTest extends Specification {
       commandWithCacheB.isResponseFromCache() == true
     cleanup:
       context.shutdown()
+  }
+
+  def "should use remote cache"(){
+    setup:
+      CommandWithNetworkFallback commandWithNetworkFallbackA = new CommandWithNetworkFallback("Angel", false)
+      CommandWithNetworkFallback commandWithNetworkFallbackB = new CommandWithNetworkFallback("Angel", true)
+    when:
+      String resultA = commandWithNetworkFallbackA.execute()
+      String resultB = commandWithNetworkFallbackB.execute()
+    then:
+      resultA == "Hello Angel!";
+      resultB == "Hello Angel!";
   }
 }

@@ -22,6 +22,7 @@ dependencies {
     // We use the latest groovy 2.x version for building this library
     compile 'org.codehaus.groovy:groovy-all:2.4.4'
     compile 'com.netflix.hystrix:hystrix-core:1.5.1'
+    compile 'redis.clients:jedis:2.8.1'
     // We use the awesome Spock testing and specification framework
     testCompile 'org.spockframework:spock-core:1.0-groovy-2.4'
     testCompile 'junit:junit:4.12'
