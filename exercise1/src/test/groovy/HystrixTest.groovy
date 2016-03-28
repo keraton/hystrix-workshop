@@ -6,8 +6,10 @@
  */
 
 
+import com.netflix.hystrix.strategy.concurrency.HystrixRequestContext
 import spock.lang.Specification
 import ws.ns.hystrix.CommandHelloWorld
+import ws.ns.hystrix.CommandWithCache
 import ws.ns.hystrix.CommandWithFallback
 
 class HystrixTest extends Specification {
@@ -29,5 +31,22 @@ class HystrixTest extends Specification {
       result == "Hello Angel!"
       commandWithFallback.isFailedExecution()
       commandWithFallback.isResponseFromFallback()
+  }
+
+  def "should use cache"() {
+    setup:
+      CommandWithCache commandWithCacheA = new CommandWithCache("Angel")
+      CommandWithCache commandWithCacheB = new CommandWithCache("Angel")
+      HystrixRequestContext context = HystrixRequestContext.initializeContext()
+    when:
+      String resultA = commandWithCacheA.execute()
+      String resultB = commandWithCacheB.execute()
+    then:
+      resultA == "Hello Angel!"
+      resultB == "Hello Angel!"
+      commandWithCacheA.isResponseFromCache() == false
+      commandWithCacheB.isResponseFromCache() == true
+    cleanup:
+      context.shutdown()
   }
 }
