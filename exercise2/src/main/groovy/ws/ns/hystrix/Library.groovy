@@ -5,6 +5,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.context.ApplicationContext
 import ws.ns.hystrix.data.RandomDomain
 import ws.ns.hystrix.data.RandomRepository
+import org.springframework.cloud.client.circuitbreaker.EnableCircuitBreaker
 
 
 /*
@@ -14,6 +15,7 @@ import ws.ns.hystrix.data.RandomRepository
  * @author apimentel, @date 3/27/16 10:35 PM
  */
 @SpringBootApplication
+@EnableCircuitBreaker
 class Library {
     public static void main(String[] args) {
         ApplicationContext ctx = SpringApplication.run(Library.class, args);
