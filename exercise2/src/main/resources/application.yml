@@ -8,3 +8,7 @@ spring.datasource.driver-class-name: com.mysql.jdbc.Driver
 spring.datasource.testWhileIdle: true
 spring.datasource.timeBetweenEvictionRunsMillis: 15000
 spring.datasource.validationQuery: SELECT 1
+spring.rabbitmq.host: 192.168.1.67
+spring.rabbitmq.port: 5672
+spring.rabbitmq.username: hystrix
+spring.rabbitmq.password: hystrix
