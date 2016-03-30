@@ -2,6 +2,7 @@ package ws.ns.hystrix
 
 import org.springframework.boot.SpringApplication
 import org.springframework.boot.autoconfigure.SpringBootApplication
+import org.springframework.cloud.netflix.hystrix.dashboard.EnableHystrixDashboard
 import org.springframework.context.ApplicationContext
 import ws.ns.hystrix.data.RandomDomain
 import ws.ns.hystrix.data.RandomRepository
@@ -16,6 +17,7 @@ import org.springframework.cloud.client.circuitbreaker.EnableCircuitBreaker
  */
 @SpringBootApplication
 @EnableCircuitBreaker
+@EnableHystrixDashboard
 class Library {
     public static void main(String[] args) {
         ApplicationContext ctx = SpringApplication.run(Library.class, args);
