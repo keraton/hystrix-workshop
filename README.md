@@ -6,7 +6,7 @@ The workshop is composed of 3 exercises, each one has the finished product in a 
 
 ## Exercise 1 - Hystrix Basics
 
-In the first exercise we will use the simplest approach to implement hystrix. We will create simple classes with that extend HystrixCommand and user unit tests to verify it.
+In the first exercise we will use the simplest approach to implement hystrix. We will create simple classes with that extend HystrixCommand and use a unit tests to verify it.
 
 #### Setup
 
@@ -171,7 +171,7 @@ class CommandWithCache extends HystrixCommand<String> {
 
 #### Command with remote fallback
 
-In the implementation of the fall back method there are several patterns that can be used:
+In the implementation of the fall back method there are several patterns that should be used:
 * Fail Fast: no fallback, the exception will propagate.
 * Fail Silent: return null, an empty List and empty Map or other such responses.
 * Fail Static: return a default static method (a constant).
@@ -386,7 +386,7 @@ gradle clean bootRun
 
 #### Create a Service layer
 
-* Add a class service class with updates a record with new random values and gets the random string by id
+* Add a service class that updates a record with new random values and gets the random string by id
 ```groovy
 package ws.ns.hystrix.service
 
@@ -661,7 +661,7 @@ spring:
 
 #### Let's gather all the data together
 
-* Change the configuration of the web app to have the following values
+* Change the configuration of the web app to have the values from Clu
  ```yml
  spring.rabbitmq.host: ?
  spring.rabbitmq.port: 5672
