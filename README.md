@@ -580,6 +580,7 @@ and aggregate the stream of metrics into a turbine app through a AMQP server.
 
 #### Create turbine app
 
+* Setup and account on https://www.cloudamqp.com/
 * Create a new gradle project in a new folder
 ```
 gradle init --type groovy-library    
@@ -636,7 +637,15 @@ class Library {
         ApplicationContext ctx = SpringApplication.run(Library, args)
     }
 }
-`````
+```
+* Add amqp configuration specific to your cloudamqp account to application.yml
+```yml
+spring.rabbitmq.host: fox.rmq.cloudamqp.com
+spring.rabbitmq.virtual-host: ***
+spring.rabbitmq.port: 5672
+spring.rabbitmq.username: ***
+spring.rabbitmq.password: ***
+```
 * Run the app
 ```
 gradle clean bootRun
@@ -654,6 +663,14 @@ spring:
   application:
     name: Angel
 ```
+* Add amqp configuration to application.yml
+```yml
+spring.rabbitmq.host: fox.rmq.cloudamqp.com
+spring.rabbitmq.virtual-host: ***
+spring.rabbitmq.port: 5672
+spring.rabbitmq.username: ***
+spring.rabbitmq.password: ***
+```
 * Run the app and test the endpoints
 * Verify that the stream of metrics is being generated on http://localhost:8989/
 * Enter to the hystrix dashboard http://localhost:8080/hystrix
@@ -661,12 +678,13 @@ spring:
 
 #### Let's gather all the data together
 
-* Change the configuration of the web app to have the values from Clu
+* Change the configuration of the web app to have the values from AMQP
  ```yml
- spring.rabbitmq.host: ?
- spring.rabbitmq.port: 5672
- spring.rabbitmq.username: hystrix
- spring.rabbitmq.password: hystrix
+spring.rabbitmq.host: fox.rmq.cloudamqp.com
+spring.rabbitmq.virtual-host: qghlygtg
+spring.rabbitmq.port: 5672
+spring.rabbitmq.username: qghlygtg
+spring.rabbitmq.password: F_VLCcr8BPMmVZRLJGu_H3QCsOX1_bSr
 
  ```
 * Run your app and add some load.
