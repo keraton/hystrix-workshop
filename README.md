@@ -11,14 +11,7 @@ In the first exercise we will use the simplest approach to implement hystrix. We
 #### Setup
 
 * Create an empty folder
-* Init a maven project with the language of your preference
-```
-mvn -B archetype:generate \
-  -DarchetypeGroupId=org.apache.maven.archetypes \
-  -DgroupId=com.mycompany.app \
-  -DartifactId=my-app
-```
-* Or you can use idea/eclipse/netbeans to create your maven project
+* Init a maven project with IDE of your preference
 * Add hystrix dependency
 ```
         <dependency>
@@ -342,16 +335,9 @@ In the last exercise we created hystrix commands by hand, but there's another al
 #### Setup
 
 * Create a new folder
-* Init a gradle project with the language of your preference
-```
-gradle init --type groovy-library    
-```
-* Add the idea plugin in the build.gradle file it you will be using Idea
-```
-apply plugin: 'idea'
-```
-* Add dependencies, the build.gradle file should look like this
-```groovy
+* Init a maven project with IDE of your preference
+* Add dependencies, the pom.xml file should look like this
+```xml
 buildscript {
     ext {
         springBootVersion = '1.3.3.RELEASE'
@@ -396,7 +382,7 @@ dependencyManagement {
 ```
 * Test everything is going smooth (and download half internet)
 ```
-gradle clean build
+mvn clean install
 ```
 
 #### Create domain layer
