@@ -135,9 +135,6 @@ import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/**
- * Created by Bowie on 18/01/2017.
- */
 public class CommandWithFallbackTest {
 
     @Test
@@ -198,9 +195,6 @@ import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/**
- * Created by Bowie on 18/01/2017.
- */
 public class CommandWithCacheTest {
 
     @Test
@@ -238,12 +232,21 @@ In the implementation of the fall back method there are several patterns that sh
 The last option requires care because the fallback dependes on an external resource and should be isolated in another command.
 For this exercise we will implement the last one. In this case we will use redis as the external cache.
 
+* Install Redis client in local
+
+See in the redis.io
+https://redis.io/
+
 * Add the dependencies required for the external cache.
 ```
-compile 'redis.clients:jedis:2.8.1'
+        <dependency>
+            <groupId>redis.clients</groupId>
+            <artifactId>jedis</artifactId>
+            <version>2.8.1</version>
+        </dependency>
 ```
 * Add a CommandWithNetworkFallback class with the following code
-```groovy
+```java
 import com.netflix.hystrix.HystrixCommand
 import com.netflix.hystrix.HystrixCommandGroupKey
 import com.netflix.hystrix.HystrixCommandKey
@@ -257,53 +260,78 @@ class CommandWithNetworkFallback extends HystrixCommand<String> {
   public CommandWithNetworkFallback(String name, boolean fail) {
     super(HystrixCommand.Setter.withGroupKey(HystrixCommandGroupKey.Factory.asKey('RemoteServiceX'))
       .andCommandKey(HystrixCommandKey.Factory.asKey('GetValueCommand')))
-    this.name = name
-    this.fail = fail
-  }
+import com.netflix.hystrix.HystrixCommand;
+import com.netflix.hystrix.HystrixCommandGroupKey;
+import com.netflix.hystrix.HystrixCommandKey;
+import com.netflix.hystrix.HystrixThreadPoolKey;
+import redis.clients.jedis.Jedis;
 
-  @Override
-  protected String run() {
-    if(fail){
-      throw new RuntimeException('Failed')
+public class CommandWithNetworkFallback extends HystrixCommand<String> {
+    private final String name;
+    private final boolean fail;
+
+    public CommandWithNetworkFallback(String name, boolean fail) {
+        super(HystrixCommand.Setter.withGroupKey(HystrixCommandGroupKey.Factory.asKey("RemoteServiceX"))
+                .andCommandKey(HystrixCommandKey.Factory.asKey("GetValueCommand")));
+        this.name = name;
+        this.fail = fail;
     }
-    String result = 'Hello ' + name + '!'
-    new Jedis('localhost').set(name, result)
-    result
-  }
 
-  @Override
-  protected String getFallback() {
-    new NetworkedFallback(name).execute()
-  }
-
-  private class NetworkedFallback extends HystrixCommand<String>{
-    private final String name
-    public NetworkedFallback(String name){
-      super(HystrixCommand.Setter.withGroupKey(HystrixCommandGroupKey.Factory.asKey('RemoteServiceX'))
-        .andCommandKey(HystrixCommandKey.Factory.asKey('GetValueFallbackCommand'))
-        .andThreadPoolKey(HystrixThreadPoolKey.Factory.asKey('RemoteServiceXFallback')))
-      this.name = name
-    }
     @Override
-    protected String run() throws Exception {
-      new Jedis('localhost').get(name)
+    protected String run() {
+        if(fail){
+            throw new RuntimeException("Failed");
+        }
+        String result = "Hello " + name + "!";
+        new Jedis("localhost").set(name, result);
+        return result;
     }
-  }
+
+    @Override
+    protected String getFallback() {
+        return new NetworkedFallback(name).execute();
+    }
+
+    private class NetworkedFallback extends HystrixCommand<String>{
+        private final String name;
+        public NetworkedFallback(String name){
+            super(HystrixCommand.Setter.withGroupKey(HystrixCommandGroupKey.Factory.asKey("RemoteServiceX"))
+                    .andCommandKey(HystrixCommandKey.Factory.asKey("GetValueFallbackCommand"))
+                    .andThreadPoolKey(HystrixThreadPoolKey.Factory.asKey("RemoteServiceXFallback")));
+            this.name = name;
+        }
+        @Override
+        protected String run() throws Exception {
+            return new Jedis("localhost").get(name);
+        }
+    }
 }
 ```
 * Add a test case, the responses should be the same but one will come from redis
-```groovy
-  def "should use remote cache"(){
-    setup:
-      CommandWithNetworkFallback commandWithNetworkFallbackA = new CommandWithNetworkFallback("Angel", false)
-      CommandWithNetworkFallback commandWithNetworkFallbackB = new CommandWithNetworkFallback("Angel", true)
-    when:
-      String resultA = commandWithNetworkFallbackA.execute()
-      String resultB = commandWithNetworkFallbackB.execute()
-    then:
-      resultA == "Hello Angel!";
-      resultB == "Hello Angel!";
-  }
+```java
+import org.junit.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+public class CommandWithNetworkFallbackTest {
+
+    @Test
+    public void should () {
+        // Given
+        CommandWithNetworkFallback commandWithNetworkFallbackA = new CommandWithNetworkFallback("Angel", false);
+        CommandWithNetworkFallback commandWithNetworkFallbackB = new CommandWithNetworkFallback("Angel", true);
+
+        // When
+        String resultA = commandWithNetworkFallbackA.execute();
+        String resultB = commandWithNetworkFallbackB.execute();
+
+        // Then
+        assertThat(resultA).isEqualTo("Hello Angel!");
+        assertThat(resultB).isEqualTo("Hello Angel!");
+
+    }
+
+}
 ```
 
 ## Exercise 2 - Spring boot + Hystrix
