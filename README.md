@@ -36,7 +36,16 @@ mvn -B archetype:generate \
             <scope>test</scope>
         </dependency>
 ```
+* Add AssertJ dependency
+```
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <version>1.2.0</version>
+            <scope>test</scope>
+        </dependency>
 
+```
 * Test everything is going smooth 
 ```
 mvn clean install
@@ -47,43 +56,47 @@ mvn clean install
 This case show the basic construct that is used by Hystrix, the Hystrix Command. We need to override the run method with the business logic that we need to isolate.
 
 * Add a CommandHelloWorld with the following code
-```groovy
-import com.netflix.hystrix.HystrixCommand
-import com.netflix.hystrix.HystrixCommandGroupKey
+```java
+import com.netflix.hystrix.HystrixCommand;
+import com.netflix.hystrix.HystrixCommandGroupKey;
 
-class CommandHelloWorld extends HystrixCommand<String> {
+public class CommandHelloWorld extends HystrixCommand<String> {
 
-  private final String name;
+    private final String name;
 
-  public CommandHelloWorld(String name) {
-    super(HystrixCommandGroupKey.Factory.asKey('ExampleGroup'))
-    this.name = name
-  }
+    public CommandHelloWorld(String name) {
+        super(HystrixCommandGroupKey.Factory.asKey("ExampleGroup"));
+        this.name = name;
+    }
 
-  @Override
-  protected String run() {
-    'Hello ' + name + '!'
-  }
+    @Override
+    protected String run() {
+        return "Hello " + name + "!";
+    }
 }
 ```
 * Add a test case to verify the output is correct
-```groovy
+```java
+import org.junit.Test;
 
-import spock.lang.Specification
-import ws.ns.hystrix.CommandHelloWorld
+import static org.assertj.core.api.Assertions.assertThat;
 
-class HystrixTest extends Specification {
-  def 'should return hello world'() {
-    setup:
-      CommandHelloWorld commandHelloWorld = new CommandHelloWorld('Angel')
-    when:
-      String result = commandHelloWorld.execute()
-    then:
-      result == 'Hello Angel!'
-  }
+public class CommandHelloWorldTest {
+
+    @Test
+    public void should () {
+        // Given
+        CommandHelloWorld commandHelloWorld = new CommandHelloWorld("Angel");
+
+        // When
+        String result = commandHelloWorld.execute();
+
+        // Then
+        assertThat(result).isEqualTo("Hello Angel!");
+    }
+
 }
 ```
-
 * Test it out
 
 #### Command with fallback
@@ -92,41 +105,56 @@ One of the key concepts in hystrix is the fallback. The fallback is method that 
 To add this logic we will need to override the getFallback method.
 
 * Add a CommandWithFallback class with the following code
-```groovy
-import com.netflix.hystrix.HystrixCommand
-import com.netflix.hystrix.HystrixCommandGroupKey
+```java
+import com.netflix.hystrix.HystrixCommand;
+import com.netflix.hystrix.HystrixCommandGroupKey;
 
-class CommandWithFallback extends HystrixCommand<String> {
+public class CommandWithFallback extends HystrixCommand<String> {
 
-  private final String name
+    private final String name;
 
-  public CommandWithFallback(String name) {
-    super(HystrixCommandGroupKey.Factory.asKey('ExampleGroup'))
-    this.name = name
-  }
-  @Override
-  protected String run() throws Exception {
-    throw new RuntimeException('Expected exception')
-  }
+    public CommandWithFallback (String name) {
+        super(HystrixCommandGroupKey.Factory.asKey("ExampleGroup"));
+        this.name = name;
+    }
 
-  @Override
-  protected String getFallback() {
-    return 'Hello '+name+'!'
-  }
+    @Override
+    protected String run() throws Exception {
+        throw new RuntimeException("Expected Exception");
+    }
+
+    @Override
+    protected String getFallback() {
+        return "Hello " + name + "!";
+    }
 }
 ```
 * Add a test case, the result should be the same but it comes from the fallback
-```groovy
-  def 'should use fallback'() {
-    setup:
-      CommandWithFallback commandWithFallback = new CommandWithFallback('Angel')
-    when:
-      String result = commandWithFallback.execute()
-    then:
-      result == 'Hello Angel!'
-      commandWithFallback.isFailedExecution()
-      commandWithFallback.isResponseFromFallback()
-  }
+```java
+import org.junit.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+/**
+ * Created by Bowie on 18/01/2017.
+ */
+public class CommandWithFallbackTest {
+
+    @Test
+    public void should () {
+        // Given
+        CommandWithFallback commandWithFallback = new CommandWithFallback("Angel");
+
+        // When
+        String result = commandWithFallback.execute();
+
+        // Then
+        assertThat(result).isEqualTo("Hello Angel!");
+        assertThat(commandWithFallback.isFailedExecution());
+        assertThat(commandWithFallback.isResponseFromFallback());
+    }
+
+}
 ```
 
 * Test it out
@@ -137,49 +165,64 @@ Hystrix has built-in short-lived  request caching that allows de-duping of comma
 To use this feature we need to override the getCacheKey method and make available a HystrixRequestContext which constains the state and manages request scope variables that share state among threads.
 
 * Add a CommandWithCache class with the following code
-```groovy
+```java
 
-import com.netflix.hystrix.HystrixCommand
-import com.netflix.hystrix.HystrixCommandGroupKey
+import com.netflix.hystrix.HystrixCommand;
+import com.netflix.hystrix.HystrixCommandGroupKey;
 
-class CommandWithCache extends HystrixCommand<String> {
+public class CommandWithCache extends HystrixCommand<String> {
 
-  private final String name
+    private final String name;
 
-  public CommandWithCache(String name) {
-    super(HystrixCommandGroupKey.Factory.asKey('ExampleGroup'))
-    this.name = name
-  }
+    public CommandWithCache(String name) {
+        super(HystrixCommandGroupKey.Factory.asKey("ExampleGroup"));
+        this.name = name;
+    }
 
-  @Override
-  protected String run() {
-    'Hello ' + name + '!'
-  }
+    @Override
+    protected String run() throws Exception {
+        return "Hello " + name + "!";
+    }
 
-  @Override
-  protected String getCacheKey() {
-    name
-  }
+    @Override
+    protected String getCacheKey() {
+        return name;
+    }
 }
+
 ```
 * Add a test case, the result should be the same but second response should come from the cache
-```groovy
-  def 'should use cache'() {
-    setup:
-      CommandWithCache commandWithCacheA = new CommandWithCache('Angel')
-      CommandWithCache commandWithCacheB = new CommandWithCache('Angel')
-      HystrixRequestContext context = HystrixRequestContext.initializeContext()
-    when:
-      String resultA = commandWithCacheA.execute()
-      String resultB = commandWithCacheB.execute()
-    then:
-      resultA == 'Hello Angel!'
-      resultB == 'Hello Angel!'
-      commandWithCacheA.isResponseFromCache() == false
-      commandWithCacheB.isResponseFromCache() == true
-    cleanup:
-      context.shutdown()
-  }
+```java
+import com.netflix.hystrix.strategy.concurrency.HystrixRequestContext;
+import org.junit.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+/**
+ * Created by Bowie on 18/01/2017.
+ */
+public class CommandWithCacheTest {
+
+    @Test
+    public void should () {
+        // Given
+        CommandWithCache commandWithCache1 = new CommandWithCache("Angel");
+        CommandWithCache commandWithCache2 = new CommandWithCache("Angel");
+
+        // When
+        HystrixRequestContext.initializeContext();
+
+        String commandWithCache1Result = commandWithCache1.execute();
+        String commandWithCache2Result = commandWithCache2.execute();
+
+        // Then
+        assertThat(commandWithCache1Result).isEqualTo("Hello Angel!");
+        assertThat(commandWithCache2Result).isEqualTo("Hello Angel!");
+        assertThat(commandWithCache1.isResponseFromCache()).isFalse();
+        assertThat(commandWithCache2.isResponseFromCache()).isTrue();
+    }
+
+}
 ```
 * Test it out
 
