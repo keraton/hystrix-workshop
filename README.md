@@ -11,21 +11,35 @@ In the first exercise we will use the simplest approach to implement hystrix. We
 #### Setup
 
 * Create an empty folder
-* Init a gradle project with the language of your preference
+* Init a maven project with the language of your preference
 ```
-gradle init --type groovy-library    
+mvn -B archetype:generate \
+  -DarchetypeGroupId=org.apache.maven.archetypes \
+  -DgroupId=com.mycompany.app \
+  -DartifactId=my-app
 ```
-* Add the idea plugin in the build.gradle file it you will be using Idea
-```
-apply plugin: 'idea'
-```
+* Or you can use idea/eclipse/netbeans to create your maven project
 * Add hystrix dependency
 ```
-compile 'com.netflix.hystrix:hystrix-core:1.5.1'
+        <dependency>
+            <groupId>com.netflix.hystrix</groupId>
+            <artifactId>hystrix-core</artifactId>
+            <version>1.5.1</version>
+        </dependency>
 ```
+* Add Junit dependency
+```
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.12</version>
+            <scope>test</scope>
+        </dependency>
+```
+
 * Test everything is going smooth 
 ```
-gradle clean build
+mvn clean install
 ```
 
 #### Hello World Command
