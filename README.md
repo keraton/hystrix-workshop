@@ -409,37 +409,36 @@ We will create a RandomServer which return a random value to its client
 mvn clean install
 ```
 
-#### Create domain layer
+#### Create service and controller
 
-* Create a Domain object with 3 fields Id, randomString, randomNumber
-```groovy
-package ws.ns.hystrix.data
+* Create a service and controller that return a simple random value
+```java
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import javax.persistence.Entity
-import javax.persistence.GeneratedValue
-import javax.persistence.Id
+import java.util.UUID;
 
-@Entity
-class RandomDomain {
-  @Id
-  Long id
+@RestController
+@SpringBootApplication
+public class RandomApplication  {
 
-  String randomString
+    @RequestMapping("/random")
+    public String get() {
+        return UUID.randomUUID().toString();
+    }
 
-  Long randomNumber
+    public static void main(String[] args) {
+        SpringApplication.run(RandomApplication.class, args);
+    }
+
 }
 ```
 
-* Create a Repository for the domain class
-```groovy
-package ws.ns.hystrix.data
-
-import org.springframework.data.jpa.repository.JpaRepository
-import org.springframework.stereotype.Repository
-
-@Repository
-public interface RandomRepository extends JpaRepository<RandomDomain, Long> {
-}
+* Run it with IDEA or using maven command
+```sh
+mvn spring-boot:run
 ```
 
 * Add spring boot main class and save a random domain on start
