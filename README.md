@@ -826,6 +826,33 @@ and aggregate the stream of metrics into a turbine app through a AMQP server.
             </dependency>
         </dependencies>
     </dependencyManagement>
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.keratonjava</groupId>
+    <artifactId>hystrix-spring-boot-tutorial-turbine</artifactId>
+    <version>1.0-SNAPSHOT</version>
+
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>1.4.3.RELEASE</version>
+    </parent>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>Camden.SR4</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <dependencies>
 
@@ -841,7 +868,12 @@ and aggregate the stream of metrics into a turbine app through a AMQP server.
 
         <dependency>
             <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-turbine-amqp</artifactId>
+            <artifactId>spring-cloud-starter-turbine-stream</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-stream-rabbit</artifactId>
         </dependency>
 
     </dependencies>
@@ -864,68 +896,79 @@ and aggregate the stream of metrics into a turbine app through a AMQP server.
 ```
 * Create spring main class
 
-```groovy
-package ws.ns.hystrix
+```java
+package com.keratonjava.turbine;
 
-import org.springframework.boot.SpringApplication
-import org.springframework.boot.autoconfigure.SpringBootApplication
-import org.springframework.cloud.netflix.turbine.amqp.EnableTurbineAmqp
-import org.springframework.context.ApplicationContext
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.netflix.turbine.stream.EnableTurbineStream;
+
 @SpringBootApplication
-@EnableTurbineAmqp
-class Library {
-    public static void main(String[] args) {
-        ApplicationContext ctx = SpringApplication.run(Library, args)
+@EnableTurbineStream
+public class TurbineApplication {
+
+    public static void main(String... args) {
+        SpringApplication.run(TurbineApplication.class, args);
     }
 }
+
 ```
-* Add amqp configuration specific to your cloudamqp account to application.yml
-```yml
-spring.rabbitmq.host: fox.rmq.cloudamqp.com
-spring.rabbitmq.virtual-host: ***
-spring.rabbitmq.port: 5672
-spring.rabbitmq.username: ***
-spring.rabbitmq.password: ***
+* Add amqp configuration specific to your cloudamqp account to application.properties
+```properties
+server.port=8060
+spring.rabbitmq.host=cat.rmq.cloudamqp.com
+spring.rabbitmq.virtual-host=***
+spring.rabbitmq.port=5672
+spring.rabbitmq.username=***
+spring.rabbitmq.password=***
 ```
 * Run the app
-```
-gradle clean bootRun
-```
 
-#### Add support for amqp on the existing web app
 
-* Add hystrix amqp dependency to exercise2
-```
-compile 'org.springframework.cloud:spring-cloud-netflix-hystrix-amqp'
+#### Add support for stream on the existing web app
+
+* Add hystrix stream dependency to CalculatorServer
+```xml
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-netflix-hystrix-amqp</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-stream-rabbit</artifactId>
+        </dependency>
 ```
 * Setup the application name in the file bootstrap.yml
-```yml
+```xml
 spring:
   application:
-    name: Angel
+    name: Your_name
 ```
-* Add amqp configuration to application.yml
-```yml
-spring.rabbitmq.host: fox.rmq.cloudamqp.com
-spring.rabbitmq.virtual-host: ***
-spring.rabbitmq.port: 5672
-spring.rabbitmq.username: ***
-spring.rabbitmq.password: ***
+* Add amqp configuration to application.properties
+```properties
+server.port=8060
+spring.rabbitmq.host=cat.rmq.cloudamqp.com
+spring.rabbitmq.virtual-host=***
+spring.rabbitmq.port=5672
+spring.rabbitmq.username=***
+spring.rabbitmq.password=***
 ```
 * Run the app and test the endpoints
-* Verify that the stream of metrics is being generated on http://localhost:8989/
-* Enter to the hystrix dashboard http://localhost:8080/hystrix
+* Verify that the stream of metrics is being generated on http://localhost:8060/
+* Enter to the hystrix dashboard http://localhost:8070/hystrix
 * Monitor the stream generated by the current app
 
 #### Let's gather all the data together
 
 * Change the configuration of the web app to have the values from AMQP
- ```yml
-spring.rabbitmq.host: fox.rmq.cloudamqp.com
-spring.rabbitmq.virtual-host: qghlygtg
-spring.rabbitmq.port: 5672
-spring.rabbitmq.username: qghlygtg
-spring.rabbitmq.password: F_VLCcr8BPMmVZRLJGu_H3QCsOX1_bSr
+ ```properties
+server.port=8060
+spring.rabbitmq.host=cat.rmq.cloudamqp.com
+spring.rabbitmq.virtual-host=jbgfqbkf
+spring.rabbitmq.port=5672
+spring.rabbitmq.username=jbgfqbkf
+spring.rabbitmq.password=sJuGRIlADtaDIcMrSIBbEdemo8w7e9lR
 
  ```
 * Run your app and add some load.
