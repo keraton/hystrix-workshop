@@ -607,85 +607,74 @@ server.port=8090
 ```
 
 * Run your application and verify the endpoints generate the correct response http://localhost:8090/calculate
+* You will see that the calculate will return exactly the same value from the RandomServer
 
 #### Add hystrix support
 
 As mentioned before we will be using javanica annotations to create the command for this exercise. 
 
-* Create two classes one for each method of the service and implement the fallback method as you wish.
-```groovy
-package ws.ns.hystrix.commands
+* In the CalculatorService add the HystrixCommand Annotation
+```java
+package com.keratonjava.client;
 
-import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
-import ws.ns.hystrix.service.RandomService
-import ws.ns.hystrix.data.RandomDomain
+import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
-@Component
-class RandomDomainSelectCommand {
-  @Autowired
-  RandomService randomService
-  @HystrixCommand(commandKey ="selectDomain" ,fallbackMethod = "fallback")
-  public String get(Long id) {
-    randomService.getString(id)
-  }
+import java.net.URI;
 
-  public String fallback(Long id) {
-    new RandomDomain()
-  }
+@Service
+public class CalculatorService {
+
+    private final RestTemplate restTemplate;
+
+    @Autowired
+    public CalculatorService(RestTemplate restTemplate) {
+        this.restTemplate = restTemplate;
+    }
+
+    @HystrixCommand(fallbackMethod = "fakeRandom")
+    public String calculateRandom() {
+        URI uri = URI.create("http://localhost:8080/random");
+        return this.restTemplate.getForObject(uri, String.class);
+    }
+
+    public String fakeRandom() {
+        return "fake-2e8d-4565-a4a7-9cb5bb8a4c42";
+    }
 }
+
 ```
+* In the Spring-boot main class, add @EnableHystrix annotation
+```java
+package com.keratonjava.client;
 
-```groovy
-import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
-import ws.ns.hystrix.service.RandomService
-import ws.ns.hystrix.data.RandomDomain
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.cloud.netflix.hystrix.EnableHystrix;
+import org.springframework.context.annotation.Bean;
+import org.springframework.web.client.RestTemplate;
 
-@Component
-class RandomDomainUpdateCommand {
-  @Autowired
-  RandomService randomService
-  @HystrixCommand(commandKey = "updateDomain",fallbackMethod = "fallback")
-  public RandomDomain generateDomain(Long id) {
-    randomService.generate(id)
-  }
-
-  public RandomDomain fallback(Long id) {
-    return new RandomDomain()
-  }
-}
-```
-
-* Change service calls with Command execution in the controller
-
-```groovy
-  @Autowired
-  RandomDomainUpdateCommand randomRepositoryCommand
-  @Autowired
-  RandomDomainSelectCommand domainSelectCommand
-
-  @RequestMapping(path = "hello", method = RequestMethod.GET)
-  @ResponseBody
-  public String get() {
-    domainSelectCommand.get(1L)
-  }
-  @RequestMapping(path = "hello", method = RequestMethod.POST)
-  @ResponseBody
-  public RandomDomain post() {
-    randomRepositoryCommand.generateDomain(1L)
-  }
-```
-
-* Enable Hystrix on the main class
-```groovy
+@EnableHystrix
 @SpringBootApplication
-@EnableCircuitBreaker
-class Library {...}
+public class CalculatorApplication {
+
+    @Bean
+    public RestTemplate rest(RestTemplateBuilder builder) {
+        return builder.build();
+    }
+
+    public static void main(String[] args) {
+        SpringApplication.run(CalculatorApplication.class, args);
+    }
+
+}
+
 ```
 * Run the app and verify the endpoints work as before
+* Try to stop the RandomService to see what happen
 
 #### Add hystrix dashboard
 
