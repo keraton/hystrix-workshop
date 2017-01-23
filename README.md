@@ -413,6 +413,8 @@ mvn clean install
 
 * Create a service and controller that return a simple random value
 ```java
+package com.keratonjava.random;
+
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -441,108 +443,170 @@ public class RandomApplication  {
 mvn spring-boot:run
 ```
 
-* Add spring boot main class and save a random domain on start
-```groovy
-package ws.ns.hystrix
+* Test it in http://localhost:8080/random
 
-import org.springframework.boot.SpringApplication
-import org.springframework.boot.autoconfigure.SpringBootApplication
-import org.springframework.context.ApplicationContext
-import ws.ns.hystrix.data.RandomDomain
-import ws.ns.hystrix.data.RandomRepository
 
-@SpringBootApplication
-class Library {
-    public static void main(String[] args) {
-        ApplicationContext ctx = SpringApplication.run(Library, args)
-        RandomRepository randomRepository = ctx.getBean(RandomRepository)
-        randomRepository.save(new RandomDomain(id: 1L, randomNumber: new Random().nextInt(1000), randomString: UUID.randomUUID().toString()))
-    }
-}
+#### Create a Consumer Server
+
+We will create a calculator that use the random value from the Random server.
+
+* Create a new folder
+* Init a maven project with IDE of your preference
+* Add dependencies, the pom.xml file should look like this
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.keratonjava.tuto</groupId>
+    <artifactId>hystrix-spring-boot-tutorial-client</artifactId>
+    <version>1.0-SNAPSHOT</version>
+
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>1.4.3.RELEASE</version>
+    </parent>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>Camden.SR4</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <dependencies>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-hystrix</artifactId>
+        </dependency>
+
+    </dependencies>
+
+    <properties>
+        <java.version>1.8</java.version>
+    </properties>
+
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
 ```
-* Add jdbc configurations and management port to the application.yml
-```yml
-management.port: 8081
-spring.jpa.generate-ddl: true
-spring.jpa.hibernate.ddl-auto: create-drop
-spring.datasource.url: jdbc:mysql://localhost/hystrix
-spring.datasource.username: hystrix
-spring.datasource.password: hystrix
-spring.datasource.driver-class-name: com.mysql.jdbc.Driver
-spring.datasource.testWhileIdle: true
-spring.datasource.timeBetweenEvictionRunsMillis: 15000
-spring.datasource.validationQuery: SELECT 1
-```
-* Run your add and verify everything is going smooth
-```
-gradle clean bootRun
-```
 
-#### Create a Service layer
+#### Create the Calculator service
+* Add a service that use the random value
+```java
+package com.keratonjava.client;
 
-* Add a service class that updates a record with new random values and gets the random string by id
-```groovy
-package ws.ns.hystrix.service
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
-import ws.ns.hystrix.data.RandomDomain
-import ws.ns.hystrix.data.RandomRepository
-import javax.transaction.Transactional
+import java.net.URI;
 
 @Service
-@Transactional
-class RandomService {
-  @Autowired
-  RandomRepository randomRepository
+public class CalculatorService {
 
-  public RandomDomain generate(Long id){
-    RandomDomain randomDomain = randomRepository.getOne(id)
-    randomDomain.randomNumber = new Random().nextInt(1000)
-    randomDomain.randomString = UUID.randomUUID().toString()
-    randomRepository.save(randomDomain)
-  }
+    private final RestTemplate restTemplate;
 
-  public String getString(Long id){
-    randomRepository.getOne(id)?.randomString
-  }
+    @Autowired
+    public CalculatorService(RestTemplate restTemplate) {
+        this.restTemplate = restTemplate;
+    }
+
+    public String calculateRandom() {
+        URI uri = URI.create("http://localhost:8080/random");
+        return this.restTemplate.getForObject(uri, String.class);
+    }
+
 }
 ```
 
-#### Add http endpoints
-* Add a controller with two endpoints one for each service layer
-```groovy
-package ws.ns.hystrix.web
+#### Create the Calculator Controller
+* Add the calculate end point that use the Calculator service
 
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.autoconfigure.AutoConfigureOrder
-import org.springframework.stereotype.Controller
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RequestMethod
-import org.springframework.web.bind.annotation.ResponseBody
-import ws.ns.hystrix.data.RandomDomain
-import ws.ns.hystrix.service.RandomService
+```java
+package com.keratonjava.client;
 
-@Controller
-public class HelloController {
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-  @Autowired
-  RandomService randomService
+@RestController
+public class CalculatorController {
 
-  @RequestMapping(path = "hello", method = RequestMethod.GET)
-  @ResponseBody
-  public String get() {
-    randomService.getString(1L)
-  }
-  @RequestMapping(path = "hello", method = RequestMethod.POST)
-  @ResponseBody
-  public RandomDomain post() {
-    randomService.generate(1L)
-  }
+    private final CalculatorService calculatorService;
+
+    public CalculatorController(CalculatorService calculatorService) {
+        this.calculatorService = calculatorService;
+    }
+
+    @RequestMapping("calculate")
+    public String calculateRandom() {
+        return calculatorService.calculateRandom();
+    }
 }
+
 ```
 
-* Run your application and verify the endpoints generate the correct response http://localhost:8080/hello
+#### Create the Calculator Application
+* Add spring-boot application main class
+```java
+package com.keratonjava.client;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.context.annotation.Bean;
+import org.springframework.web.client.RestTemplate;
+
+@EnableHystrix
+public class CalculatorApplication {
+
+    @Bean
+    public RestTemplate rest(RestTemplateBuilder builder) {
+        return builder.build();
+    }
+
+    public static void main(String[] args) {
+        SpringApplication.run(CalculatorApplication.class, args);
+    }
+
+}
+
+
+```
+* Add a application.properties
+
+```properties
+server.port=8090
+```
+
+* Run your application and verify the endpoints generate the correct response http://localhost:8090/calculate
 
 #### Add hystrix support
 
