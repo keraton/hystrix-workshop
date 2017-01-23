@@ -329,56 +329,80 @@ public class CommandWithNetworkFallbackTest {
 
 ## Exercise 2 - Spring boot + Hystrix
 
-In this exercise we will create create a simple spring boot web app and add hystrix support for the data base communication.
+In this exercise we will create create three simple spring boot web app and add hystrix support for the communication.
 In the last exercise we created hystrix commands by hand, but there's another alternative using annotations. In this exercise we will use annotation approach.
 
-#### Setup
+#### Test scenario
+
+Two servers have producer - consumer relationship between of them. And one server act as a hystrix dashboard
+
+#### Producer server
+
+We will create a RandomServer which return a random value to its client
 
 * Create a new folder
 * Init a maven project with IDE of your preference
 * Add dependencies, the pom.xml file should look like this
 ```xml
-buildscript {
-    ext {
-        springBootVersion = '1.3.3.RELEASE'
-    }
-    repositories {
-        mavenCentral()
-    }
-    dependencies {
-        classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
-    }
-}
-apply plugin: 'groovy'
-apply plugin: 'idea'
-apply plugin: 'spring-boot'
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
 
-repositories {
-    mavenCentral()
-    maven { url "https://repo.spring.io/snapshot" }
-    maven { url "https://repo.spring.io/milestone" }
-    jcenter()
-}
+    <groupId>com.keratonjava</groupId>
+    <artifactId>hystrix-spring-boot-tutorial</artifactId>
+    <version>1.0-SNAPSHOT</version>
 
-dependencies {
-    compile 'org.codehaus.groovy:groovy-all:2.4.4'
-    compile("org.springframework.boot:spring-boot-starter-web") {
-        exclude module: "spring-boot-starter-tomcat"
-    }
-    compile("org.springframework.boot:spring-boot-starter-jetty")
-    compile("org.springframework.boot:spring-boot-starter-actuator")
-    compile("org.springframework.boot:spring-boot-starter-data-jpa")
-    compile 'org.springframework.cloud:spring-cloud-starter-hystrix'
-    compile('mysql:mysql-connector-java:5.1.6')
-    testCompile 'org.spockframework:spock-core:1.0-groovy-2.4'
-    testCompile 'junit:junit:4.12'
-}
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>1.4.3.RELEASE</version>
+    </parent>
 
-dependencyManagement {
-    imports {
-        mavenBom "org.springframework.cloud:spring-cloud-dependencies:Angel.SR6"
-    }
-}
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>Camden.SR4</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <dependencies>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
+    </dependencies>
+
+    <properties>
+        <java.version>1.8</java.version>
+    </properties>
+
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+
+    
+</project>
+
 ```
 * Test everything is going smooth (and download half internet)
 ```
