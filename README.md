@@ -253,11 +253,6 @@ class CommandWithNetworkFallback extends HystrixCommand<String> {
   public CommandWithNetworkFallback(String name, boolean fail) {
     super(HystrixCommand.Setter.withGroupKey(HystrixCommandGroupKey.Factory.asKey('RemoteServiceX'))
       .andCommandKey(HystrixCommandKey.Factory.asKey('GetValueCommand')))
-import com.netflix.hystrix.HystrixCommand;
-import com.netflix.hystrix.HystrixCommandGroupKey;
-import com.netflix.hystrix.HystrixCommandKey;
-import com.netflix.hystrix.HystrixThreadPoolKey;
-import redis.clients.jedis.Jedis;
 
 public class CommandWithNetworkFallback extends HystrixCommand<String> {
     private final String name;
@@ -585,6 +580,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.web.client.RestTemplate;
 
 @EnableHystrix
+@SpringBootApplication
 public class CalculatorApplication {
 
     @Bean
@@ -600,7 +596,7 @@ public class CalculatorApplication {
 
 
 ```
-* Add a application.properties
+* Add an application.properties
 
 ```properties
 server.port=8090
@@ -784,7 +780,7 @@ You can download it with brew install wrk
 wrk -t10 -d360s -c10  http://localhost:8090/calculate
 ```
 * See how the dashboard changes in values and colors.
-* Try taking down your randomService in the middle of the test.
+* Try taking down your Random application in the middle of the test.
 * Try bringing it back and see what happens.
 
 ## Exercise 3 - Turbine
@@ -799,33 +795,6 @@ and aggregate the stream of metrics into a turbine app through a AMQP server.
 * Create a new maven project in a new folder
 * Add the dependencies for turbine
 ```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
-
-    <groupId>com.keratonjava</groupId>
-    <artifactId>hystrix-spring-boot-tutorial-turbine</artifactId>
-    <version>1.0-SNAPSHOT</version>
-
-    <parent>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-parent</artifactId>
-        <version>1.4.3.RELEASE</version>
-    </parent>
-
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>org.springframework.cloud</groupId>
-                <artifactId>spring-cloud-dependencies</artifactId>
-                <version>Camden.SR4</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
